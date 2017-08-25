@@ -1,0 +1,91 @@
+#!/bin/bash
+
+MOUNT_VOLUME='/nubis/data'
+WORKING_PATH='/nubis/work'
+
+show_help () {
+    echo -en "\nUsage:docker run --interactive --tty --env-file ~/.docker_env -v $PWD:/nubis/data nubis-deploy [command]\n\n"
+    echo -en "Commands:\n"
+    echo -en "  --help     Print this help message\n\n"
+    echo -en "  plan       Show the deployment plan\n\n"
+    echo -en "  apply      Apply the deployment\n\n"
+    echo -en "  destroy    Destroy the deployment\n"
+    exit 0
+}
+
+setup-deploy-dir () {
+    # Skip any downloaded terraform submodules.
+    #+ Terraform modules contain symlinks with full paths that are not valid in
+    #+ the container.
+    # Skip the nubis directory, we do not want it in the doc root
+    RSYNC=( 'rsync' '-auz' )
+    RSYNC_EXCLUDES=(  '--exclude=SEC,*.pid' )
+    RSYNC_EXCLUDES+=('--exclude=.terraform' )
+    RSYNC_EXCLUDES+=( '--exclude=.git*' )
+    RSYNC_EXCLUDES+=( '--exclude=.travis.yml' )
+    RSYNC_EXCLUDES+=( '--exclude=terraform.tfstate*' )
+    "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/"
+}
+
+setup-terraform () {
+    ACCOUNT=$(grep "^account = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^account\ =\ \"//g"); ACCOUNT=${ACCOUNT%%\"}
+    REGION=$(grep "^region = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^region\ =\ \"//g"); REGION=${REGION%%\"}
+    ENVIRONMENT=$(grep "^environment = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^environment\ =\ \"//g"); ENVIRONMENT=${ENVIRONMENT%%\"}
+    SERVICE_NAME=$(grep "^service_name = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^service_name\ =\ \"//g"); SERVICE_NAME=${SERVICE_NAME%%\"}
+    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${REGION}/${ENVIRONMENT}.tfstate" | \
+        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
+
+    cd "${WORKING_PATH}" && terraform init \
+        -input=true \
+        -upgrade=false \
+        -backend-config="region=us-east-1" \
+        -backend-config="key=terraform/${SERVICE_NAME}" \
+        -backend-config="bucket=${STATE_BUCKET}" \
+        "${WORKING_PATH}/nubis/terraform/"
+    if [ "$?" != 0 ]; then
+        echo "ERROR: Could not initialize teraform"
+        exit 1
+    fi
+}
+
+terraform-plan () {
+    cd "${WORKING_PATH}" && terraform plan -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
+}
+
+terraform-apply () {
+    cd "${WORKING_PATH}" && terraform plan -out="nubis/terraform/terraform.plan" -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
+
+    cd "${WORKING_PATH}" && terraform apply "nubis/terraform/terraform.plan"
+}
+
+terraform-destroy () {
+    cd "${WORKING_PATH}" && terraform destroy -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
+}
+
+# Grab and setup called options
+while [ "$1" != "" ]; do
+    case $1 in
+        --help )
+            show_help
+        ;;
+        plan )
+            setup-deploy-dir
+            setup-terraform
+            terraform-plan
+        ;;
+        apply )
+            setup-deploy-dir
+            setup-terraform
+            terraform-apply
+        ;;
+        destroy )
+            setup-deploy-dir
+            setup-terraform
+            terraform-destroy
+        ;;
+        * )
+            show_help
+        ;;
+    esac
+    shift
+done
