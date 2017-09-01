@@ -2,6 +2,10 @@
 
 MOUNT_VOLUME='/nubis/data'
 WORKING_PATH='/nubis/work'
+TERRAFORM_PATH="${WORKING_PATH}/nubis/terraform"
+
+# Make sure we capture failures from pipe commands
+set -o pipefail
 
 show_help () {
     echo -en "\nUsage:docker run --interactive --tty --env-file ~/.docker_env -v $PWD:/nubis/data nubis-deploy [command]\n\n"
@@ -10,6 +14,9 @@ show_help () {
     echo -en "  plan       Show the deployment plan\n\n"
     echo -en "  apply      Apply the deployment\n\n"
     echo -en "  destroy    Destroy the deployment\n"
+    echo -en "  show       Show the state of the deployment\n"
+    echo -en "  output     Display outputs for the deployment\n"
+    echo -en "  state      Work with the state of the deployment\n"
     exit 0
 }
 
@@ -28,42 +35,44 @@ setup-deploy-dir () {
 }
 
 setup-terraform () {
-    ACCOUNT=$(grep "^account = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^account\ =\ \"//g")
-        ACCOUNT=${ACCOUNT%%\"}
-    ENVIRONMENT=$(grep "^environment = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^environment\ =\ \"//g")
-        ENVIRONMENT=${ENVIRONMENT%%\"}
-    DEPLOYMENT_REGION=$(grep "^region = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^region\ =\ \"//g")
-        DEPLOYMENT_REGION=${DEPLOYMENT_REGION%%\"}
-    SERVICE_NAME=$(grep "^service_name = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^service_name\ =\ \"//g"); SERVICE_NAME=${SERVICE_NAME%%\"}
+    ACCOUNT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .account ); export ACCOUNT
+    ENVIRONMENT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .environment ); export ENVIRONMENT
+    DEPLOYMENT_REGION=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .region ); export DEPLOYMENT_REGION
+    SERVICE_NAME=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name ); export SERVICE_NAME
     STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ENVIRONMENT}.tfstate" | \
-        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
-    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint')
+        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket'); export STATE_BUCKET
+    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint'); export BUCKET_REGION
 
-    cd "${WORKING_PATH}" && terraform init \
+    cd "${TERRAFORM_PATH}" && terraform init \
         -input=true \
         -upgrade=false \
         -backend-config="region=${BUCKET_REGION}" \
         -backend-config="key=terraform/${SERVICE_NAME}" \
-        -backend-config="bucket=${STATE_BUCKET}" \
-        "${WORKING_PATH}/nubis/terraform/"
+        -backend-config="bucket=${STATE_BUCKET}"
     if [ "$?" != 0 ]; then
         echo "ERROR: Could not initialize teraform"
         exit 1
     fi
 }
 
-terraform-plan () {
-    cd "${WORKING_PATH}" && terraform plan -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
-}
-
 terraform-apply () {
-    cd "${WORKING_PATH}" && terraform plan -out="nubis/terraform/terraform.plan" -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
+    cd "${TERRAFORM_PATH}" && terraform plan -out="terraform.plan"
 
-    cd "${WORKING_PATH}" && terraform apply "nubis/terraform/terraform.plan"
+    if [ "$?" != 0 ]; then
+        echo "Terraform plan failed. Not applying plan."
+        exit 1
+    fi
+
+    cd "${TERRAFORM_PATH}" && terraform apply "terraform.plan"
+
+    # Copy Terraform files to the S3 bucket
+    echo -e "\nUploading Terraform assets to s3"
+    aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${SERVICE_NAME}-terraform/"
 }
 
-terraform-destroy () {
-    cd "${WORKING_PATH}" && terraform destroy -var-file="nubis/terraform/terraform.tfvars" "nubis/terraform/"
+terraform-do () {
+    declare -a _ACTION; _ACTION=( ${@} )
+    cd "${TERRAFORM_PATH}"  && terraform "${_ACTION[@]}"
 }
 
 # Grab and setup called options
@@ -75,7 +84,7 @@ while [ "$1" != "" ]; do
         plan )
             setup-deploy-dir
             setup-terraform
-            terraform-plan
+            terraform-do plan
         ;;
         apply )
             setup-deploy-dir
@@ -85,7 +94,24 @@ while [ "$1" != "" ]; do
         destroy )
             setup-deploy-dir
             setup-terraform
-            terraform-destroy
+            terraform-do destroy
+        ;;
+        show )
+            setup-deploy-dir
+            setup-terraform
+            terraform-do show
+        ;;
+        output )
+            shift
+            setup-deploy-dir
+            setup-terraform
+            terraform-do output "${@}"
+        ;;
+        state )
+            shift
+            setup-deploy-dir
+            setup-terraform
+            terraform-do state "${@}"
         ;;
         * )
             show_help
