@@ -1,10 +1,23 @@
 # Change Log
 
-## [v0.2.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.2.0) (2017-08-29)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.1.0...v0.2.0)
+## [v0.3.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.3.0) (2017-09-01)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.2.0...v0.3.0)
 
 **Merged pull requests:**
 
+- New features [\#7](https://github.com/nubisproject/nubis-docker-deploy/pull/7) ([tinnightcap](https://github.com/tinnightcap))
+
+## [v0.2.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.2.0) (2017-08-29)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.1.0...v0.2.0)
+
+**Closed issues:**
+
+- Tag v0.2.0 release [\#2](https://github.com/nubisproject/nubis-docker-deploy/issues/2)
+
+**Merged pull requests:**
+
+- Merge v0.2.0 release into develop. \[skip ci\] [\#4](https://github.com/nubisproject/nubis-docker-deploy/pull/4) ([tinnightcap](https://github.com/tinnightcap))
+- Update CHANGELOG for v0.2.0 release \[skip ci\] [\#3](https://github.com/nubisproject/nubis-docker-deploy/pull/3) ([tinnightcap](https://github.com/tinnightcap))
 - Updates for region detection for app-state-bucket [\#1](https://github.com/nubisproject/nubis-docker-deploy/pull/1) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.1.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.1.0) (2017-08-25)
