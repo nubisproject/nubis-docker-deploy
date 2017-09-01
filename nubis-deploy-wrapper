@@ -28,13 +28,10 @@ setup-deploy-dir () {
 }
 
 setup-terraform () {
-    ACCOUNT=$(grep "^account = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^account\ =\ \"//g")
-        ACCOUNT=${ACCOUNT%%\"}
-    ENVIRONMENT=$(grep "^environment = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^environment\ =\ \"//g")
-        ENVIRONMENT=${ENVIRONMENT%%\"}
-    DEPLOYMENT_REGION=$(grep "^region = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^region\ =\ \"//g")
-        DEPLOYMENT_REGION=${DEPLOYMENT_REGION%%\"}
-    SERVICE_NAME=$(grep "^service_name = " "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | sed "s/^service_name\ =\ \"//g"); SERVICE_NAME=${SERVICE_NAME%%\"}
+    ACCOUNT=$(toml2json < "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | jq -r .account )
+    ENVIRONMENT=$(toml2json < "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | jq -r .environment )
+    DEPLOYMENT_REGION=$(toml2json < "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | jq -r .region )
+    SERVICE_NAME=$(toml2json < "${WORKING_PATH}/nubis/terraform/terraform.tfvars" | jq -r .service_name )
     STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ENVIRONMENT}.tfstate" | \
         jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
     BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint')

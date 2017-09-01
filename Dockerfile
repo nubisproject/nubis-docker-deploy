@@ -8,7 +8,8 @@ FROM ubuntu:16.04
 ENV AwCliVersion=1.10.38 \
     AwsVaultVersion=3.7.1 \
     TerraformVersion=0.10.2 \
-    UnicredsVersion=1.5.1
+    UnicredsVersion=1.5.1 \
+    Toml2JSONVersion=0.1.0
 
 # Intall package dependencies
 RUN apt-get update && apt-get install -y \
@@ -29,6 +30,9 @@ WORKDIR /nubis
 
 # Install the AWS cli tool
 RUN pip install awscli==${AwCliVersion}
+
+# Install toml2json
+RUN pip install -v toml2json==${Toml2JSONVersion}
 
 # Install aws-vault
 RUN ["/bin/bash", "-c", "set -o pipefail && mkdir -p /nubis/bin \
