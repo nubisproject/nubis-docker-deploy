@@ -7,7 +7,7 @@ FROM ubuntu:16.04
 #+ Where necesary the 'v' is specified in code below
 ENV AwCliVersion=1.10.38 \
     AwsVaultVersion=3.7.1 \
-    TerraformVersion=0.10.2 \
+    TerraformVersion=0.10.7 \
     UnicredsVersion=1.5.1 \
     Toml2JSONVersion=0.1.0
 

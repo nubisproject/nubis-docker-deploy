@@ -31,39 +31,101 @@ setup-deploy-dir () {
     RSYNC_EXCLUDES+=( '--exclude=.git*' )
     RSYNC_EXCLUDES+=( '--exclude=.travis.yml' )
     RSYNC_EXCLUDES+=( '--exclude=terraform.tfstate*' )
-    "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/"
+    if ! "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/" ; then
+        echo -e "\033[1;31mERROR: Failed to rsync files\033[0m"
+        exit 1
+    fi
 }
 
 setup-terraform () {
-    ACCOUNT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .account ); export ACCOUNT
-    ENVIRONMENT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .environment ); export ENVIRONMENT
-    DEPLOYMENT_REGION=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .region ); export DEPLOYMENT_REGION
-    SERVICE_NAME=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name ); export SERVICE_NAME
-    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ENVIRONMENT}.tfstate" | \
-        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket'); export STATE_BUCKET
-    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint'); export BUCKET_REGION
+    # Test for the existance of the variables file
+    if [ ! -f "${TERRAFORM_PATH}/terraform.tfvars" ]; then
+        echo -e "\033[1;31mERROR: 'terraform.tfvars' file not found in ${TERRAFORM_PATH}\033[0m"
+        exit 1
+    fi
+    ACCOUNT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
+    # Make sure we got an account name
+    if [ "${ACCOUNT}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: 'account' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        exit 1
+    else
+        export ACCOUNT
+    fi
+    ARENA=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
+    # Make sure we got an arena
+    if [ "${ARENA}" == 'null' ]; then
+        echo -e "\033[0;32mWARNING: 'arena' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        echo -e "\033[0;32mWARNING: Defaulting 'arena' to 'core'\033[0m"
+        echo -e "\033[0;32mWARNING: 'arena' will be required in a future release\033[0m"
+        ARENA='core'; export ARENA
+    else
+        export ARENA
+    fi
+    DEPLOYMENT_REGION=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
+    # Make sure we got a deployment region
+    if [ "${DEPLOYMENT_REGION}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: 'region' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        exit 1
+    else
+        export DEPLOYMENT_REGION
+    fi
+    SERVICE_NAME=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name )
+    # Make sure we got a service name
+    if [ "${SERVICE_NAME}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: 'service_name' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        exit 1
+    else
+        export SERVICE_NAME
+    fi
+    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
+        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
+    # Make sure we have a state bucket
+    if [ "${STATE_BUCKET}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
+        echo -e "\033[1;31mERROR: 'curl -s \"http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
+        exit 1
+    else
+        export STATE_BUCKET
+    fi
+    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint')
+    # Make sure we got a state bucker region
+    if [ "${BUCKET_REGION}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: Could not look up bucket location using:\033[0m"
+        echo -e "\033[1;31mERROR: 'aws s3api get-bucket-location --bucket \"${STATE_BUCKET}\"'\033[0m"
+        exit 1
+    else
+        export BUCKET_REGION
+    fi
 
-    cd "${TERRAFORM_PATH}" && terraform init \
+    if ! cd "${TERRAFORM_PATH}" ; then
+        echo -e "\033[1;31mERROR: Could not cd into '${TERRAFORM_PATH}'\033[0m"
+        exit 1
+    fi
+
+    if ! terraform init \
         -input=true \
         -upgrade=false \
         -backend-config="region=${BUCKET_REGION}" \
         -backend-config="key=terraform/${SERVICE_NAME}" \
-        -backend-config="bucket=${STATE_BUCKET}"
-    if [ "$?" != 0 ]; then
-        echo "ERROR: Could not initialize teraform"
+        -backend-config="bucket=${STATE_BUCKET}" ;
+    then
+        echo -e "\033[1;31mERROR: Could not initialize teraform\033[0m"
         exit 1
     fi
 }
 
 terraform-apply () {
-    cd "${TERRAFORM_PATH}" && terraform plan -out="terraform.plan"
-
-    if [ "$?" != 0 ]; then
-        echo "Terraform plan failed. Not applying plan."
+    if ! cd "${TERRAFORM_PATH}" ; then
+        echo -e "\033[1;31mERROR: Could not cd into '${TERRAFORM_PATH}'\033[0m"
         exit 1
     fi
 
-    cd "${TERRAFORM_PATH}" && terraform apply "terraform.plan"
+    if ! terraform plan -out="terraform.plan" ; then
+        echo -e "\033[1;31mERROR: Terraform plan failed. Not applying plan\033[0m"
+        exit 1
+    fi
+
+    terraform apply "terraform.plan"
 
     # Copy Terraform files to the S3 bucket
     echo -e "\nUploading Terraform assets to s3"
@@ -78,6 +140,9 @@ terraform-do () {
 # Grab and setup called options
 while [ "$1" != "" ]; do
     case $1 in
+        --debug )
+            set -x
+        ;;
         --help )
             show_help
         ;;

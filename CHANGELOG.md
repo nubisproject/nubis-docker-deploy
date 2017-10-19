@@ -1,10 +1,28 @@
 # Change Log
 
-## [v0.3.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.3.0) (2017-09-01)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.2.0...v0.3.0)
+## [v0.4.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.4.0) (2017-10-19)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.3.0...v0.4.0)
+
+**Closed issues:**
+
+- Use toml2json to parse terraform tf vars files [\#5](https://github.com/nubisproject/nubis-docker-deploy/issues/5)
 
 **Merged pull requests:**
 
+- Updates for Nubis v2.0.1 [\#14](https://github.com/nubisproject/nubis-docker-deploy/pull/14) ([tinnightcap](https://github.com/tinnightcap))
+- Upgrade to Terraform 0.10.7 [\#13](https://github.com/nubisproject/nubis-docker-deploy/pull/13) ([gozer](https://github.com/gozer))
+
+## [v0.3.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.3.0) (2017-09-01)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.2.0...v0.3.0)
+
+**Closed issues:**
+
+- Tag v0.3.0 release [\#8](https://github.com/nubisproject/nubis-docker-deploy/issues/8)
+
+**Merged pull requests:**
+
+- Merge v0.3.0 release into develop. \[skip ci\] [\#10](https://github.com/nubisproject/nubis-docker-deploy/pull/10) ([tinnightcap](https://github.com/tinnightcap))
+- Update CHANGELOG for v0.3.0 release \[skip ci\] [\#9](https://github.com/nubisproject/nubis-docker-deploy/pull/9) ([tinnightcap](https://github.com/tinnightcap))
 - New features [\#7](https://github.com/nubisproject/nubis-docker-deploy/pull/7) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.2.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.2.0) (2017-08-29)
