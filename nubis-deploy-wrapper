@@ -77,8 +77,7 @@ setup-terraform () {
     else
         export SERVICE_NAME
     fi
-    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
-        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
+    STATE_BUCKET=$(aws s3 ls | awk {'print $3'}  | grep nubis-apps-state | head)
     # Make sure we have a state bucket
     if [ "${STATE_BUCKET}" == 'null' ]; then
         echo -e "\033[1;31mERROR: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
