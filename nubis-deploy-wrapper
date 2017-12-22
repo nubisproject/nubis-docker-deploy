@@ -39,8 +39,7 @@ setup-terraform () {
     ENVIRONMENT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .environment ); export ENVIRONMENT
     DEPLOYMENT_REGION=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .region ); export DEPLOYMENT_REGION
     SERVICE_NAME=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name ); export SERVICE_NAME
-    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ENVIRONMENT}.tfstate" | \
-        jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket'); export STATE_BUCKET
+    STATE_BUCKET=$(aws s3 ls | awk '{print $3}' | grep nubis-apps-state | head); export STATE_BUCKET
     BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint'); export BUCKET_REGION
 
     cd "${TERRAFORM_PATH}" && terraform init \
