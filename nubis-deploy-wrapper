@@ -81,9 +81,12 @@ setup-terraform () {
         jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
     # Make sure we have a state bucket
     if [ "${STATE_BUCKET}" == 'null' ]; then
-        echo -e "\033[1;31mERROR: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
-        echo -e "\033[1;31mERROR: 'curl -s \"http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
-        exit 1
+        echo -e "\033[1;32mWARNING: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
+        echo -e "\033[1;32mWARNING: 'curl -s \"http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
+
+        # Default checking state bucket using awscli
+        echo -e "\033[0;32mWARNING: Defaulting state bucket discovery using awscli\033[0m"
+        STATE_BUCKET=$(aws s3 ls | grep nubis-apps-state | awk '{print $3}'); export STATE_BUCKET
     else
         export STATE_BUCKET
     fi
