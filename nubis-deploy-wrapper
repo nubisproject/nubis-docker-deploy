@@ -43,6 +43,15 @@ setup-terraform () {
         echo -e "\033[1;31mERROR: 'terraform.tfvars' file not found in ${TERRAFORM_PATH}\033[0m"
         exit 1
     fi
+
+    # Test for the existance of state.tf file
+    if [ ! -f "${TERRAFORM_PATH}/state.tf" ];then
+        echo -e "\033[1;31mERROR: 'state.tf' file not found in ${TERRAFORM_PATH}\033[0m"
+        echo -e "\033[1;31mERROR: 'state.tf' file should contain the following lines:\033[0m"
+        echo -e "\033[1;31mERROR: terraform { backend "s3" {} }\033[0m"
+        exit 1
+    fi
+
     ACCOUNT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
     # Make sure we got an account name
     if [ "${ACCOUNT}" == 'null' ]; then
