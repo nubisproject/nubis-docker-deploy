@@ -80,13 +80,21 @@ setup-terraform () {
     STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
         jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
     # Make sure we have a state bucket
-    if [ "${STATE_BUCKET}" == 'null' ]; then
+    if [ "${STATE_BUCKET}" == 'null' ] || [ -z "${STATE_BUCKET}" ]; then
         echo -e "\033[1;32mWARNING: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
         echo -e "\033[1;32mWARNING: 'curl -s \"http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
 
         # Default checking state bucket using awscli
-        echo -e "\033[0;32mWARNING: Defaulting state bucket discovery using awscli\033[0m"
-        STATE_BUCKET=$(aws s3 ls | grep nubis-apps-state | awk '{print $3}'); export STATE_BUCKET
+        echo -e "\033[0;32mWARNING: Defaulting state bucket discovery in S3 using awscli\033[0m"
+        STATE_BUCKET=$(aws s3 ls | grep nubis-apps-state | awk '{print $3}')
+        if [ "${STATE_BUCKET}" == 'null' ] || [ -z "${STATE_BUCKET}" ]; then
+            echo -e "\033[1;31mERROR: Could not find S3 state bucket using:\033[0m"
+            echo -e "\033[1;31mERROR: 'aws s3 ls | grep nubis-apps-state | awk \"{ print \$3 }\"'\033[0m"
+            exit 1
+        else
+            export STATE_BUCKET
+        fi
+
     else
         export STATE_BUCKET
     fi
