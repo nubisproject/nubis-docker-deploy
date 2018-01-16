@@ -12,27 +12,28 @@ ENV AwCliVersion=1.10.38 \
     Toml2JSONVersion=0.1.0
 
 # Intall package dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    jq=1.5* \
-    python-pip=8.1.* \
-    unzip \
-    rsync \
+RUN apt-get -q update \
+    && apt-get install --no-install-recommends -qy \
+        curl \
+        git \
+        jq=1.5* \
+        python-setuptools \
+        python-wheel \
+        python-pip=8.1.* \
+        unzip \
+        rsync \
+    && pip install awscli==${AwCliVersion} \
+    && pip install -v toml2json==${Toml2JSONVersion} \
+    && mkdir -p /nubis/work /nubis/bin \
+    && chmod 777 /nubis/work \
     && apt-get clean -y \
     && apt-get autoclean -y \
     && apt-get autoremove -y \
     && apt-get purge -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /root/.cache \
     && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 WORKDIR /nubis
-
-# Install the AWS cli tool
-RUN pip install awscli==${AwCliVersion}
-
-# Install toml2json
-RUN pip install -v toml2json==${Toml2JSONVersion}
 
 # Install aws-vault
 RUN ["/bin/bash", "-c", "set -o pipefail && mkdir -p /nubis/bin \
@@ -49,10 +50,6 @@ RUN ["/bin/bash", "-c", "set -o pipefail \
 RUN ["/bin/bash", "-c", "set -o pipefail \
     && curl --silent -L https://github.com/Versent/unicreds/releases/download/${UnicredsVersion}/unicreds_${UnicredsVersion}_linux_amd64.tar.gz \
     | tar --extract --gunzip --directory=/nubis/bin" ]
-
-# Allow everyone to write and to the work directory
-RUN mkdir /nubis/work && \
-    chmod 777 /nubis/work
 
 # Copy over the nubis-deploy-wrapper script
 COPY [ "nubis-deploy-wrapper", "/nubis/" ]
