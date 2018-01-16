@@ -36,7 +36,7 @@ RUN apt-get -q update \
 WORKDIR /nubis
 
 # Install aws-vault
-RUN ["/bin/bash", "-c", "set -o pipefail && mkdir -p /nubis/bin \
+RUN ["/bin/bash", "-c", "set -o pipefail \
     && curl --silent -L --out /nubis/bin/aws-vault https://github.com/99designs/aws-vault/releases/download/v${AwsVaultVersion}/aws-vault-linux-amd64 \
     && chmod +x /nubis/bin/aws-vault" ]
 
