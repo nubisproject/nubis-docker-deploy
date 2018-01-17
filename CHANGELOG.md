@@ -1,14 +1,33 @@
 # Change Log
 
+## [v0.5.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.5.0) (2018-01-17)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.4.0...v0.5.0)
+
+**Closed issues:**
+
+- Refactor Dockerfile [\#25](https://github.com/nubisproject/nubis-docker-deploy/issues/25)
+- Check to see if a state.tf file exists [\#22](https://github.com/nubisproject/nubis-docker-deploy/issues/22)
+- Self determine app state bucket location without having to read public state [\#18](https://github.com/nubisproject/nubis-docker-deploy/issues/18)
+- \[terraform\] Upgrade to 0.10.7 [\#11](https://github.com/nubisproject/nubis-docker-deploy/issues/11)
+
+**Merged pull requests:**
+
+- Dockerfile refactor [\#26](https://github.com/nubisproject/nubis-docker-deploy/pull/26) ([limed](https://github.com/limed))
+- App state bucket discovery [\#24](https://github.com/nubisproject/nubis-docker-deploy/pull/24) ([limed](https://github.com/limed))
+- Checking if state.tf file exists [\#23](https://github.com/nubisproject/nubis-docker-deploy/pull/23) ([limed](https://github.com/limed))
+
 ## [v0.4.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.4.0) (2017-10-19)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.3.0...v0.4.0)
 
 **Closed issues:**
 
 - Use toml2json to parse terraform tf vars files [\#5](https://github.com/nubisproject/nubis-docker-deploy/issues/5)
+- Tag v0.4.0 release [\#15](https://github.com/nubisproject/nubis-docker-deploy/issues/15)
 
 **Merged pull requests:**
 
+- Merge v0.4.0 release into develop. \[skip ci\] [\#17](https://github.com/nubisproject/nubis-docker-deploy/pull/17) ([tinnightcap](https://github.com/tinnightcap))
+- Update CHANGELOG for v0.4.0 release \[skip ci\] [\#16](https://github.com/nubisproject/nubis-docker-deploy/pull/16) ([tinnightcap](https://github.com/tinnightcap))
 - Updates for Nubis v2.0.1 [\#14](https://github.com/nubisproject/nubis-docker-deploy/pull/14) ([tinnightcap](https://github.com/tinnightcap))
 - Upgrade to Terraform 0.10.7 [\#13](https://github.com/nubisproject/nubis-docker-deploy/pull/13) ([gozer](https://github.com/gozer))
 
