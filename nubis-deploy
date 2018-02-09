@@ -2,7 +2,6 @@
 
 MOUNT_VOLUME='/nubis/data'
 WORKING_PATH='/nubis/work'
-TERRAFORM_PATH="${WORKING_PATH}/nubis/terraform"
 
 # Make sure we capture failures from pipe commands
 set -o pipefail
@@ -10,78 +9,64 @@ set -o pipefail
 show_help () {
     echo -en "\nUsage:docker run --interactive --tty --env-file ~/.docker_env -v $PWD:/nubis/data nubis-deploy [command]\n\n"
     echo -en "Commands:\n"
-    echo -en "  --help     Print this help message\n\n"
-    echo -en "  plan       Show the deployment plan\n\n"
-    echo -en "  apply      Apply the deployment\n\n"
-    echo -en "  destroy    Destroy the deployment\n"
-    echo -en "  show       Show the state of the deployment\n"
-    echo -en "  output     Display outputs for the deployment\n"
-    echo -en "  state      Work with the state of the deployment\n"
+    echo -en "  --help         Print this help message\n"
+    echo -en "  --skip-init    Skip Terraform initialization\n"
+    echo -en "                   Must be used with a volume mount only after initial run\n"
+    echo -en "  plan           Show the deployment plan\n"
+    echo -en "  apply          Apply the deployment\n"
+    echo -en "  destroy        Destroy the deployment\n"
+    echo -en "  show           Show the state of the deployment\n"
+    echo -en "  output         Display outputs for the deployment\n"
+    echo -en "  state          Work with the state of the deployment\n\n"
     exit 0
-}
-
-setup-deploy-dir () {
-    # Skip any downloaded terraform submodules.
-    #+ Terraform modules contain symlinks with full paths that are not valid in
-    #+ the container.
-    # Skip the nubis directory, we do not want it in the doc root
-    RSYNC=( 'rsync' '-auz' )
-    RSYNC_EXCLUDES=(  '--exclude=SEC,*.pid' )
-    RSYNC_EXCLUDES+=('--exclude=.terraform' )
-    RSYNC_EXCLUDES+=( '--exclude=.git*' )
-    RSYNC_EXCLUDES+=( '--exclude=.travis.yml' )
-    RSYNC_EXCLUDES+=( '--exclude=terraform.tfstate*' )
-    if ! "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/" ; then
-        echo -e "\033[1;31mERROR: Failed to rsync files\033[0m"
-        exit 1
-    fi
 }
 
 setup-terraform () {
     # Test for the existance of the variables file
-    if [ ! -f "${TERRAFORM_PATH}/terraform.tfvars" ]; then
-        echo -e "\033[1;31mERROR: 'terraform.tfvars' file not found in ${TERRAFORM_PATH}\033[0m"
+    MOUNT_TERRAFORM_PATH="${MOUNT_VOLUME}/nubis/terraform"
+    if [ ! -f "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" ]; then
+        echo -e "\033[1;31mERROR: 'terraform.tfvars' file not found in ${MOUNT_TERRAFORM_PATH}\033[0m"
         exit 1
     fi
 
     # Test for the existance of state.tf file
-    if [ ! -f "${TERRAFORM_PATH}/state.tf" ];then
-        echo -e "\033[1;31mERROR: 'state.tf' file not found in ${TERRAFORM_PATH}\033[0m"
+    if [ ! -f "${MOUNT_TERRAFORM_PATH}/state.tf" ];then
+        echo -e "\033[1;31mERROR: 'state.tf' file not found in ${MOUNT_TERRAFORM_PATH}\033[0m"
         echo -e "\033[1;31mERROR: 'state.tf' file should contain the following lines:\033[0m"
-        echo -e "\033[1;31mERROR: terraform { backend "s3" {} }\033[0m"
+        echo -e "\033[1;31mERROR: terraform { backend \"s3\" {} }\033[0m"
         exit 1
     fi
 
-    ACCOUNT=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
+    ACCOUNT=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
     # Make sure we got an account name
     if [ "${ACCOUNT}" == 'null' ]; then
-        echo -e "\033[1;31mERROR: 'account' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        echo -e "\033[1;31mERROR: 'account' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
         exit 1
     else
         export ACCOUNT
     fi
-    ARENA=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
+    ARENA=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
     # Make sure we got an arena
     if [ "${ARENA}" == 'null' ]; then
-        echo -e "\033[0;32mWARNING: 'arena' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        echo -e "\033[0;32mWARNING: 'arena' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
         echo -e "\033[0;32mWARNING: Defaulting 'arena' to 'core'\033[0m"
         echo -e "\033[0;32mWARNING: 'arena' will be required in a future release\033[0m"
         ARENA='core'; export ARENA
     else
         export ARENA
     fi
-    DEPLOYMENT_REGION=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
+    DEPLOYMENT_REGION=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
     # Make sure we got a deployment region
     if [ "${DEPLOYMENT_REGION}" == 'null' ]; then
-        echo -e "\033[1;31mERROR: 'region' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        echo -e "\033[1;31mERROR: 'region' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
         exit 1
     else
         export DEPLOYMENT_REGION
     fi
-    SERVICE_NAME=$(toml2json < "${TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name )
+    SERVICE_NAME=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name )
     # Make sure we got a service name
     if [ "${SERVICE_NAME}" == 'null' ]; then
-        echo -e "\033[1;31mERROR: 'service_name' not set ${TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        echo -e "\033[1;31mERROR: 'service_name' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
         exit 1
     else
         export SERVICE_NAME
@@ -117,17 +102,42 @@ setup-terraform () {
         export BUCKET_REGION
     fi
 
-    if ! cd "${TERRAFORM_PATH}" ; then
+    # Set up the working terraform path and create the working directory
+    export TERRAFORM_PATH="${WORKING_PATH}/${SERVICE_NAME}/nubis/terraform"
+    if [ ! -d "${WORKING_PATH}/${SERVICE_NAME}" ]; then
+        echo "Creating directory ${WORKING_PATH}/${SERVICE_NAME}"
+        mkdir "${WORKING_PATH}/${SERVICE_NAME}"
+    fi
+}
+
+setup-deploy-dir () {
+    # Skip any downloaded terraform submodules.
+    #+ Terraform modules contain symlinks with full paths that are not valid in
+    #+ the container.
+    RSYNC=( 'rsync' '-auz' )
+    RSYNC_EXCLUDES=(  '--exclude=SEC,*.pid' )
+    RSYNC_EXCLUDES+=('--exclude=.terraform' )
+    RSYNC_EXCLUDES+=( '--exclude=.git*' )
+    RSYNC_EXCLUDES+=( '--exclude=.travis.yml' )
+    RSYNC_EXCLUDES+=( '--exclude=terraform.tfstate*' )
+    if ! "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/${SERVICE_NAME}/" ; then
+        echo -e "\033[1;31mERROR: Failed to rsync files\033[0m"
+        exit 1
+    fi
+}
+
+terraform-init () {
+    if ! cd "${TERRAFORM_PATH}"; then
         echo -e "\033[1;31mERROR: Could not cd into '${TERRAFORM_PATH}'\033[0m"
         exit 1
     fi
 
     if ! terraform init \
         -input=true \
-        -upgrade=false \
+        -upgrade=true \
         -backend-config="region=${BUCKET_REGION}" \
         -backend-config="key=terraform/${SERVICE_NAME}" \
-        -backend-config="bucket=${STATE_BUCKET}" ;
+        -backend-config="bucket=${STATE_BUCKET}";
     then
         echo -e "\033[1;31mERROR: Could not initialize teraform\033[0m"
         exit 1
@@ -140,12 +150,12 @@ terraform-apply () {
         exit 1
     fi
 
-    if ! terraform plan -out="terraform.plan" ; then
+    if ! terraform plan -out=".terraform/terraform.plan"; then
         echo -e "\033[1;31mERROR: Terraform plan failed. Not applying plan\033[0m"
         exit 1
     fi
 
-    terraform apply "terraform.plan"
+    terraform apply ".terraform/terraform.plan"
 
     # Copy Terraform files to the S3 bucket
     echo -e "\nUploading Terraform assets to s3"
@@ -154,7 +164,7 @@ terraform-apply () {
 
 terraform-do () {
     declare -a _ACTION; _ACTION=( ${@} )
-    cd "${TERRAFORM_PATH}"  && terraform "${_ACTION[@]}"
+    cd "${TERRAFORM_PATH}" && terraform "${_ACTION[@]}"
 }
 
 # Grab and setup called options
@@ -163,40 +173,55 @@ while [ "$1" != "" ]; do
         --debug )
             set -x
         ;;
-        --help )
+        -h | --help | help )
             show_help
         ;;
+        --skip-init )
+            SKIP_INIT='1'
+        ;;
         plan )
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-do plan
+            GOT_COMMAND=1
         ;;
         apply )
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-apply
+            GOT_COMMAND=1
         ;;
         destroy )
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-do destroy
+            GOT_COMMAND=1
         ;;
         show )
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-do show
+            GOT_COMMAND=1
         ;;
         output )
             shift
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-do output "${@}"
+            GOT_COMMAND=1
         ;;
         state )
             shift
-            setup-deploy-dir
             setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
             terraform-do state "${@}"
+            GOT_COMMAND=1
         ;;
         * )
             show_help
@@ -204,3 +229,9 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
+
+# If we did not get a valid command print the help message
+if [ "${GOT_COMMAND:-0}" == 0 ]; then
+    help
+    exit 1
+fi
