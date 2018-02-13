@@ -1,5 +1,12 @@
 # Change Log
 
+## [v0.7.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.7.0) (2018-02-13)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.6.0...v0.7.0)
+
+**Merged pull requests:**
+
+- Add account operations to the docker image [\#35](https://github.com/nubisproject/nubis-docker-deploy/pull/35) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v0.6.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.6.0) (2018-02-09)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.5.0...v0.6.0)
 
@@ -7,9 +14,12 @@
 
 - Tag v0.5.0 release [\#28](https://github.com/nubisproject/nubis-docker-deploy/issues/28)
 - Tag v0.5.0633950 release [\#27](https://github.com/nubisproject/nubis-docker-deploy/issues/27)
+- Tag v0.6.0 release [\#32](https://github.com/nubisproject/nubis-docker-deploy/issues/32)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.6.0 release \[skip ci\] [\#34](https://github.com/nubisproject/nubis-docker-deploy/pull/34) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.6.0 release \[skip ci\] [\#33](https://github.com/nubisproject/nubis-docker-deploy/pull/33) ([nubis-automation](https://github.com/nubis-automation))
 - Convert to alpine linux [\#31](https://github.com/nubisproject/nubis-docker-deploy/pull/31) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.5.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.5.0) (2018-01-17)
