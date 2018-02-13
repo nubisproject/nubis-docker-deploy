@@ -1,0 +1,336 @@
+#!/bin/bash
+
+STATE_REGION='eu-west-1'
+ACCOUNTS_DIR='/nubis/data/accounts'
+ACCOUNT_DIR="${ACCOUNTS_DIR}/${NUBIS_ACCOUNT}"
+
+# Check for required dependencies
+dependency_check () {
+    if ! hash aws 2>/dev/null; then
+        echo "Please install the AWS CLI API to use this build tool. https://aws.amazon.com/cli/"
+    fi
+    if ! hash terraform 2>/dev/null; then
+        echo "Please install terraform to use this build tool. https://terraform.io/"
+    fi
+    if ! hash jq 2>/dev/null; then
+        echo "Please install jq to use this build tool. https://github.com/stedolan/jq"
+    fi
+    if [ ! -d "${ACCOUNT_DIR}" ]; then
+        echo "No such account '${NUBIS_ACCOUNT}'"
+        echo "You may need to pass in '--account some-account'"
+        exit 1
+    fi
+}
+
+show_help () {
+    echo -en "\nUsage:docker run -it --env-file ~/.docker_env -v $PWD:/nubis/data nubis-deploy account [command]\n\n"
+    echo -en "Options:\n"
+    echo -en "  --help         Print this help message\n"
+    echo -en "  --debug        Basically set -x\n\n"
+    echo -en "Commands:\n"
+    echo -en "  accounts            Print the accounts available for manipulation\n"
+    echo -en "  admins              Print the admins configured in the account\n"
+    echo -en "  apply               Apply the deployment\n"
+#     echo -en "  cleanup             Clean up old AMIs and Packer artifacts\n"
+    echo -en "  output              Print the Terraform outputs\n"
+    echo -en "  plan                Show the deployment plan\n"
+    echo -en "  setup-account       Initialize the account\n"
+    echo -en "                        Sets up remote state in S3\n"
+    echo -en "                        Adds dynamodb State table (if missing)\n"
+    echo -en "                        Adds S3 State bucket (if missing)\n"
+    echo -en "  taint-admin-keys    Taint ALL admin keys\n"
+    echo -en "                        New keys will be generated on the next apply\n"
+    echo -en "  taint-lambda        Taint ALL lambda functions\n"
+    echo -en "                        New functions will be downloaded on the next apply\n"
+    echo -en "  update              Update Terraform modules and providors\n\n"
+}
+
+setup_account () {
+    # Check to see if remote state is already set up for this account
+    TF_DIR="${ACCOUNT_DIR}/.terraform"
+    TF_BACKEND_BUCKET=$(jq -r .backend.config.bucket "${ACCOUNT_DIR}/.terraform/terraform.tfstate" 2>/dev/null )
+    TF_BACKEND_TABLE=$(jq -r .backend.config.dynamodb_table "${ACCOUNT_DIR}/.terraform/terraform.tfstate" 2>/dev/null )
+    if [ ! -d "${TF_DIR}/modules" ] \
+        || [ ! -d "${TF_DIR}/plugins" ] \
+        || [ "${TF_BACKEND_BUCKET}" == "null" ] \
+        || [ "${TF_BACKEND_BUCKET}" == "" ] \
+        || [ "${TF_BACKEND_TABLE}" == "null" ] \
+        || [ "${TF_BACKEND_TABLE}" == "" ]; then
+
+        # Check to see if this account already has a dynamodb state table
+        #+ If not, set one up
+        STATE_TABLE=$(aws --region "${STATE_REGION}" dynamodb list-tables | jq -r .TableNames | grep 'nubis-deploy')
+        if [ -z "${STATE_TABLE}" ]; then
+            # Poor mans $(uuidgen) (util-linux package & dependancies are ~4.2MB)
+            STATE_TABLE="nubis-deploy-$(ONE=$(echo $RANDOM|sha256sum|cut -c 1-8);TWO=$(echo $RANDOM|sha256sum|cut -c 1-4);THREE=$(echo $RANDOM|sha256sum|cut -c 1-4);FOUR=$(echo $RANDOM|sha256sum|cut -c 1-4);FIVE=$(echo $RANDOM|sha256sum|cut -c 1-12); echo "${ONE}-${TWO}-${THREE}-${FOUR}-${FIVE}")"
+
+            echo "Creating dynamodb table ${STATE_TABLE}"
+            aws dynamodb create-table \
+            --region "${STATE_REGION}" \
+            --table-name "${STATE_TABLE}" \
+            --attribute-definitions AttributeName=LockID,AttributeType=S \
+            --key-schema AttributeName=LockID,KeyType=HASH \
+            --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+        fi
+
+        # Check to see if this account already has an s3 state bucket
+        #+ If not, set one up
+        STATE_BUCKET=$(aws --region "${STATE_REGION}" s3 ls | grep 'nubis-deploy' | cut -d ' ' -f 3)
+        if [ -z "${STATE_BUCKET}" ]; then
+            # Poor mans $(openssl rand -hex 16) (openssl & dependancies are ~3MB)
+            STATE_BUCKET="nubis-deploy-$(echo $RANDOM|sha256sum|cut -c 1-32)"
+
+            echo "Creating remote state bucket ${STATE_BUCKET}"
+            aws --region "${STATE_REGION}" s3 mb "s3://${STATE_BUCKET}"
+            aws --region "${STATE_REGION}" s3api put-bucket-versioning --bucket "${STATE_BUCKET}" --versioning-configuration Status=Enabled
+        else
+            # Check for versionning
+            BUCKET_VERSIONNING=$(aws --region "${STATE_REGION}" s3api get-bucket-versioning --bucket "${STATE_BUCKET}" | jq -r .Status)
+            if [ "${BUCKET_VERSIONNING}" != "Enabled" ]; then
+                echo "Enabling Versionning on state bucket"
+                aws --region "${STATE_REGION}" s3api put-bucket-versioning --bucket "${STATE_BUCKET}" --versioning-configuration Status=Enabled
+            fi
+        fi
+
+        # Initialize terraform using the state table and bucket
+        echo "Initializing Terraform"
+        cd "${ACCOUNT_DIR}" || exit 1
+        if ! terraform init \
+                    -input=true \
+                    -upgrade=false \
+                    -backend-config="region=${STATE_REGION}" \
+                    -backend-config="key=terraform/nubis-deploy" \
+                    -backend-config="bucket=${STATE_BUCKET}" \
+                    -backend-config="dynamodb_table=${STATE_TABLE}" \
+                    deploy
+        then
+            echo "Terraform Initilization Failed!"
+            exit 1
+        fi
+    fi
+}
+
+update () {
+    echo "Running update for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+
+    # Update the deploy submodule
+    cd "${ACCOUNT_DIR}" && git submodule update --init --recursive "${ACCOUNT_DIR}/deploy"
+
+    # Check to see if the account s3 state bucket has versioning enabled
+    #+ If not, set it up
+    STATE_BUCKET=$(aws --region "${STATE_REGION}" s3 ls | grep 'nubis-deploy' | cut -d ' ' -f 3)
+    BUCKET_VERSIONNING=$(aws --region "${STATE_REGION}" s3api get-bucket-versioning --bucket "${STATE_BUCKET}" | jq -r .Status)
+    if [ "${BUCKET_VERSIONNING}" != "Enabled" ]; then
+        echo "Enabling Versionning on state bucket"
+        aws --region "${STATE_REGION}" s3api put-bucket-versioning --bucket "${STATE_BUCKET}" --versioning-configuration Status=Enabled
+    fi
+
+    # Download new modules and integrations
+    cd "${ACCOUNT_DIR}" && terraform init -backend=false -input=false -upgrade=true deploy
+}
+
+plan () {
+    echo "Running plan for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" && terraform plan -input=false -var-file=../../globals/terraform.tfvars -var-file=terraform.tfvars deploy
+}
+
+apply () {
+    echo "Running apply for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" && terraform apply -input=false -var-file=../../globals/terraform.tfvars -var-file=terraform.tfvars deploy
+}
+
+output () {
+    echo "Gathering outputs for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" && terraform output | sed -e's/^/  /g'
+}
+
+cleanup () {
+# TODO: This should either be moved to the nubis-deploy script or its own container.
+#+  A few notes:
+#   1) Determine the size of installing these tools and their dependancies
+#+     to figure out best fit; This image, seperate image, lambda function?
+#   2) Dress up these checks as there is no message_print function here @gozer :)
+    hash amicleaner 2>/dev/null || message_print CRITICAL "Please install amicleaner to use this build tool. https://github.com/bonclay7/aws-amicleaner"
+    hash cleanup-packer-aws-resources 2>/dev/null || message_print CRITICAL "Please install cleanup-packer-aws-resources to use this build tool. https://github.com/AndrewFarley/farley-aws-missing-tools/tree/master/cleanup-packer-aws-resources"
+
+    echo "Running cleanup for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+
+    echo "Cleaning Packer Artifacts"
+    cleanup-packer-aws-resources
+
+    #XXX: Here if we used instead --keep-previous 10 --mapping-values "project platform" we would only keep the last 10 builds
+    echo "Cleaning Duplicate AMIs"
+    for REGION in $(aws --region us-west-2 ec2 describe-regions | jq -r .Regions[].RegionName | sort); do
+        echo "Cleaning in ${REGION}"
+        AWS_DEFAULT_REGION=${REGION} amicleaner -f --mapping-key tags --keep-previous 1 --mapping-values "project platform version"
+    done
+}
+
+admins () {
+    echo "Showing admins for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" || exit 1
+
+    # Gather the admins info from terraform outputs
+    DATA=$(terraform output | grep 'admins_')
+
+    # Count the mumber of admins we have
+    ADMIN_COUNT=0
+    while [ "${DONE:-0}" == 0 ]; do
+        ADMIN_NAME=$(echo "$DATA" | grep admins_users | cut -d ' ' -f 3 | cut -d',' -f "$((ADMIN_COUNT + 1))")
+        if [ "${#ADMIN_NAME}" != 0 ]; then
+            ADMIN_COUNT=$((ADMIN_COUNT + 1))
+        else
+            DONE=1
+        fi
+    done
+
+    # Walk through the admins and gather relevant information
+    #+ formatting the output into a JSON dosument
+    JSON_DOC="["
+    while [ "${LOOP_COUNT:-0}" -lt "${ADMIN_COUNT}" ]; do
+        JSON_DOC+="    {"
+        ADMIN_NAME=$(echo "$DATA" | grep admins_users | cut -d ' ' -f 3 | cut -d',' -f "$((LOOP_COUNT + 1))")
+        JSON_DOC+="        \"admin_name\": \"${ADMIN_NAME}\","
+        ADMIN_ROLE=$(echo "$DATA" | grep admins_roles | cut -d ' ' -f 3 | cut -d',' -f "$((LOOP_COUNT + 1))")
+        JSON_DOC+="        \"admin_role\": \"${ADMIN_ROLE}\","
+        ADMIN_ACCESS_KEY=$(echo "$DATA" | grep admins_access_keys | cut -d ' ' -f 3 | cut -d',' -f "$((LOOP_COUNT + 1))")
+        JSON_DOC+="        \"admin_access_key\": \"${ADMIN_ACCESS_KEY}\","
+        ADMIN_SECRET_KEY=$(echo "$DATA" | grep admins_secret_keys | cut -d ' ' -f 3 | cut -d',' -f "$((LOOP_COUNT + 1))")
+        JSON_DOC+="        \"admin_secret_key\": \"${ADMIN_SECRET_KEY}\""
+        LOOP_COUNT=$((LOOP_COUNT + 1))
+        if [ "${LOOP_COUNT:-0}" -ne "${ADMIN_COUNT}" ]; then
+            JSON_DOC+="    },"
+        else
+            JSON_DOC+="    }"
+        fi
+    done
+    JSON_DOC+="]"
+
+    # Pretty print the JSON document using jq
+    echo "${JSON_DOC}" | jq .
+}
+
+taint_admin_keys () {
+    echo "Tainting admins for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" || exit 1
+    for ADMIN in $(terraform  show | grep module.global_admins.aws_iam_access_key | cut -d: -f1 | cut -d. -f3- ); do
+        terraform taint -module=global_admins "${ADMIN}"
+    done
+}
+
+taint_lambda () {
+    echo "Tainting lambda for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" || exit 1
+    for LAMBDA in $(terraform  show | grep -E '\.(aws_lambda_function|aws_lambda_permission)\.' | cut -d: -f1 | cut -d. -f2- ); do
+        SEGMENT_COUNT=0
+        while [ "${FOUND_SEGMENT:-0}" == '0' ]; do
+            SEGMENT=$(echo "${LAMBDA}" | cut -d'.' -f"$((SEGMENT_COUNT + 1))")
+            SEGMENT_COUNT=$((SEGMENT_COUNT + 1))
+            if [[ "${SEGMENT}" =~ aws_lambda_(function|permission) ]]; then
+                FOUND_SEGMENT=1
+            fi
+            if [ "${#SEGMENT}" == 0 ]; then
+                echo "ERROR: Segment not found!"
+                echo "ERROR: '${BASH_SOURCE[0]}' Line: '${LINENO}'"
+                exit 1
+            fi
+        done
+        MODULE=$(echo "${LAMBDA}" | cut -d'.' -f"1-$((SEGMENT_COUNT - 1))")
+        RESOURCE=$(echo "${LAMBDA}" | cut -d'.' -f"${SEGMENT_COUNT}-")
+        echo "Running 'terraform taint -module=\"${MODULE}\" \"${RESOURCE}\"'"
+        terraform taint -module="${MODULE}" "${RESOURCE}"
+        unset FOUND_SEGMENT
+    done
+}
+
+accounts () {
+    ACCOUNTS=$(cd "${ACCOUNTS_DIR}" && ls -1)
+    echo "${ACCOUNTS}"
+}
+
+# Grab and setup called options
+while [ "$1" != "" ]; do
+    case "$1" in
+        --debug | --setx )
+            set -x
+        ;;
+        -h | --help | help )
+            show_help
+            exit 0
+        ;;
+        -a | --account | --account-name )
+            NUBIS_ACCOUNT="$2"
+            ACCOUNT_DIR="${ACCOUNTS_DIR}/${NUBIS_ACCOUNT}"
+            shift
+        ;;
+        accounts )
+            dependency_check
+            accounts
+            GOT_COMMAND=1
+        ;;
+        admins )
+            dependency_check
+            setup_account
+            admins
+            GOT_COMMAND=1
+        ;;
+        apply )
+            dependency_check
+            setup_account
+            apply
+            GOT_COMMAND=1
+        ;;
+#         cleanup )
+#             dependency_check
+#             setup_account
+#             cleanup
+#             GOT_COMMAND=1
+#         ;;
+        output )
+            dependency_check
+            setup_account
+            output
+            GOT_COMMAND=1
+        ;;
+        plan )
+            dependency_check
+            setup_account
+            plan
+            GOT_COMMAND=1
+        ;;
+        setup-account )
+            dependency_check
+            setup_account
+            GOT_COMMAND=1
+        ;;
+        taint-admin-keys )
+            dependency_check
+            setup_account
+            taint_admin_keys
+            GOT_COMMAND=1
+        ;;
+        taint-lambda )
+            dependency_check
+            setup_account
+            taint_lambda
+            GOT_COMMAND=1
+        ;;
+        update | init )
+            dependency_check
+            setup_account
+            update
+            GOT_COMMAND=1
+        ;;
+        *)
+            show_help
+            exit 1
+        ;;
+    esac
+    shift
+done
+
+# If we did not get a valid command print the help message
+if [ "${GOT_COMMAND:-0}" == 0 ]; then
+    show_help
+    exit 1
+fi

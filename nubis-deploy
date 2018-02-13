@@ -17,7 +17,8 @@ show_help () {
     echo -en "  destroy        Destroy the deployment\n"
     echo -en "  show           Show the state of the deployment\n"
     echo -en "  output         Display outputs for the deployment\n"
-    echo -en "  state          Work with the state of the deployment\n\n"
+    echo -en "  state          Work with the state of the deployment\n"
+    echo -en "  account        Invoke the account-deploy script\n\n"
     exit 0
 }
 
@@ -178,6 +179,12 @@ while [ "$1" != "" ]; do
         ;;
         --skip-init )
             SKIP_INIT='1'
+        ;;
+        account )
+            shift
+            account-deploy "${@}"
+            shift "${#@}"
+            GOT_COMMAND=1
         ;;
         plan )
             setup-terraform
