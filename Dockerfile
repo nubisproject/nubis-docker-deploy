@@ -38,6 +38,9 @@ RUN ["/bin/bash", "-c", "set -o pipefail \
 # Copy over the nubis-deploy script
 COPY [ "nubis-deploy", "/nubis/bin/" ]
 
+# Copy over the account-deploy script
+COPY [ "account-deploy", "/nubis/bin/" ]
+
 ENV PATH /nubis/bin:$PATH
 ENTRYPOINT [ "/nubis/bin/nubis-deploy" ]
 CMD [ "help" ]
