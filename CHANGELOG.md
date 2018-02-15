@@ -1,10 +1,27 @@
 # Change Log
 
-## [v0.7.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.7.0) (2018-02-13)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.6.0...v0.7.0)
+## [v0.8.8](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.8.8) (2018-02-15)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.7.0...v0.8.8)
+
+**Closed issues:**
+
+- Upgrade to Terraform 0.10.8 [\#39](https://github.com/nubisproject/nubis-docker-deploy/issues/39)
 
 **Merged pull requests:**
 
+- Upgrade to Terraform 0.10.8 [\#41](https://github.com/nubisproject/nubis-docker-deploy/pull/41) ([gozer](https://github.com/gozer))
+
+## [v0.7.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.7.0) (2018-02-13)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.6.0...v0.7.0)
+
+**Closed issues:**
+
+- Tag v0.7.0 release [\#36](https://github.com/nubisproject/nubis-docker-deploy/issues/36)
+
+**Merged pull requests:**
+
+- Update CHANGELOG for v0.7.0 release \[skip ci\] [\#38](https://github.com/nubisproject/nubis-docker-deploy/pull/38) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.7.0 release \[skip ci\] [\#37](https://github.com/nubisproject/nubis-docker-deploy/pull/37) ([nubis-automation](https://github.com/nubis-automation))
 - Add account operations to the docker image [\#35](https://github.com/nubisproject/nubis-docker-deploy/pull/35) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.6.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.6.0) (2018-02-09)
