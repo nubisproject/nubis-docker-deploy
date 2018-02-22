@@ -44,6 +44,12 @@ setup-terraform () {
         echo -e "\033[1;31mERROR: 'account' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
         exit 1
     else
+        if [ "${ACCOUNT}" != "${NUBIS_ACCOUNT:-$ACCOUNT}" ]; then
+            echo -e "\033[1;31mERROR: Specified account differs from account in nubis/terraform/terraform.tfvars\033[0m"
+            echo -e "\033[1;31m'${NUBIS_ACCOUNT:-$ACCOUNT}' != '${ACCOUNT}'\033[0m"
+            echo -e "\033[1;31mBoth must match. Unable to continue.\033[0m"
+            exit 1
+        fi
         export ACCOUNT
     fi
     ARENA=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
@@ -94,7 +100,7 @@ setup-terraform () {
         export STATE_BUCKET
     fi
     BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint')
-    # Make sure we got a state bucker region
+    # Make sure we got a state bucket region
     if [ "${BUCKET_REGION}" == 'null' ]; then
         echo -e "\033[1;31mERROR: Could not look up bucket location using:\033[0m"
         echo -e "\033[1;31mERROR: 'aws s3api get-bucket-location --bucket \"${STATE_BUCKET}\"'\033[0m"
