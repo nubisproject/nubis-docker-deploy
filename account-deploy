@@ -28,21 +28,23 @@ show_help () {
     echo -en "  --help         Print this help message\n"
     echo -en "  --debug        Basically set -x\n\n"
     echo -en "Commands:\n"
-    echo -en "  accounts            Print the accounts available for manipulation\n"
-    echo -en "  admins              Print the admins configured in the account\n"
-    echo -en "  apply               Apply the deployment\n"
-#     echo -en "  cleanup             Clean up old AMIs and Packer artifacts\n"
-    echo -en "  output              Print the Terraform outputs\n"
-    echo -en "  plan                Show the deployment plan\n"
-    echo -en "  setup-account       Initialize the account\n"
-    echo -en "                        Sets up remote state in S3\n"
-    echo -en "                        Adds dynamodb State table (if missing)\n"
-    echo -en "                        Adds S3 State bucket (if missing)\n"
-    echo -en "  taint-admin-keys    Taint ALL admin keys\n"
-    echo -en "                        New keys will be generated on the next apply\n"
-    echo -en "  taint-lambda        Taint ALL lambda functions\n"
-    echo -en "                        New functions will be downloaded on the next apply\n"
-    echo -en "  update              Update Terraform modules and providors\n\n"
+    echo -en "  accounts                    Print the accounts available for manipulation\n"
+    echo -en "  admins                      Print the admins configured in the account\n"
+    echo -en "  apply                       Apply the deployment\n"
+#     echo -en "  cleanup                     Clean up old AMIs and Packer artifacts\n"
+    echo -en "  output                      Print the Terraform outputs\n"
+    echo -en "  plan                        Show the deployment plan\n"
+    echo -en "  setup-account               Initialize the account\n"
+    echo -en "                                Sets up remote state in S3\n"
+    echo -en "                                Adds dynamodb State table (if missing)\n"
+    echo -en "                                Adds S3 State bucket (if missing)\n"
+    echo -en "  show                        Show all resources.\n"
+    echo -en "  taint [MODULE] [RESOURCE]   Taint RESOURCE in MODULE\n"
+    echo -en "  taint-admin-keys            Taint ALL admin keys\n"
+    echo -en "                                New keys will be generated on the next apply\n"
+    echo -en "  taint-lambda                Taint ALL lambda functions\n"
+    echo -en "                                New functions will be downloaded on the next apply\n"
+    echo -en "  update                      Update Terraform modules and providors\n\n"
 }
 
 setup_account () {
@@ -142,6 +144,18 @@ apply () {
 output () {
     echo "Gathering outputs for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
     cd "${ACCOUNT_DIR}" && terraform output | sed -e's/^/  /g'
+}
+
+show () {
+    echo "Running show for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" && terraform show
+}
+
+taint () {
+    MODULE="${1}"
+    RESOURCE_NAME="${2}"
+    echo "Running 'taint --module=${MODULE} ${RESOURCE_NAME}' for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
+    cd "${ACCOUNT_DIR}" && terraform taint --module="${MODULE}" "${RESOURCE_NAME}"
 }
 
 cleanup () {
@@ -301,6 +315,21 @@ while [ "$1" != "" ]; do
         setup-account )
             dependency_check
             setup_account
+            GOT_COMMAND=1
+        ;;
+        show )
+            dependency_check
+            setup_account
+            show
+            GOT_COMMAND=1
+        ;;
+        taint )
+            dependency_check
+            setup_account
+            MODULE="${2}"
+            RESOURCE_NAME="${3}"
+            taint "${MODULE}" "${RESOURCE_NAME}"
+            shift 2
             GOT_COMMAND=1
         ;;
         taint-admin-keys )
