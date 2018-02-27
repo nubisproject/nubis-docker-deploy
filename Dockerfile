@@ -1,7 +1,7 @@
 # Docker image containing all dependencies for running terraform in Nubis
 
 FROM alpine:3.6
-MAINTAINER Jason Crowe <jcrowe@mozilla.com>
+LABEL maintainer="Jason Crowe <jcrowe@mozilla.com>"
 
 # Do not add a 'v' as pert of the version string (ie: v1.1.3)
 #+ This causes issues with extraction due to GitHub's methodology
