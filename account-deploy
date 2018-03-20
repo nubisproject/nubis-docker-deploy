@@ -45,7 +45,7 @@ show_help () {
     echo -en "                                New keys will be generated on the next apply\n"
     echo -en "  taint-lambda                Taint ALL lambda functions\n"
     echo -en "                                New functions will be downloaded on the next apply\n"
-    echo -en "  update                      Update Terraform modules and providors\n\n"
+    echo -en "  update                      Update Terraform modules and providers\n\n"
 }
 
 setup_account () {
