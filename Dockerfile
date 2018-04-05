@@ -7,7 +7,7 @@ LABEL maintainer="Jason Crowe <jcrowe@mozilla.com>"
 #+ This causes issues with extraction due to GitHub's methodology
 #+ Where necesary the 'v' is specified in code below
 ENV AwCliVersion=1.10.38 \
-    TerraformVersion=0.10.8 \
+    TerraformVersion=0.11.5 \
     UnicredsVersion=1.5.1 \
     Toml2JSONVersion=0.1.0
 WORKDIR /nubis
