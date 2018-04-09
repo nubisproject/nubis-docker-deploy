@@ -1,14 +1,42 @@
 # Change Log
 
+## [v0.10.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.10.0) (2018-04-09)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.9.0...v0.10.0)
+
+**Closed issues:**
+
+- Upgrade to Terraform 0.11.5 [\#50](https://github.com/nubisproject/nubis-docker-deploy/issues/50)
+
+**Merged pull requests:**
+
+- Upgrade to Terraform 0.11.5 [\#51](https://github.com/nubisproject/nubis-docker-deploy/pull/51) ([gozer](https://github.com/gozer))
+- Fixing typo [\#49](https://github.com/nubisproject/nubis-docker-deploy/pull/49) ([limed](https://github.com/limed))
+- Add travis checks and a few lint fixups [\#48](https://github.com/nubisproject/nubis-docker-deploy/pull/48) ([tinnightcap](https://github.com/tinnightcap))
+
+## [v0.9.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.9.0) (2018-02-22)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.8.8...v0.9.0)
+
+**Closed issues:**
+
+- Tag v0.9.0 release [\#46](https://github.com/nubisproject/nubis-docker-deploy/issues/46)
+
+**Merged pull requests:**
+
+- Update CHANGELOG for v0.9.0 release \[skip ci\] [\#47](https://github.com/nubisproject/nubis-docker-deploy/pull/47) ([nubis-automation](https://github.com/nubis-automation))
+- Add show and taint to account subcommand [\#45](https://github.com/nubisproject/nubis-docker-deploy/pull/45) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v0.8.8](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.8.8) (2018-02-15)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.7.0...v0.8.8)
 
 **Closed issues:**
 
 - Upgrade to Terraform 0.10.8 [\#39](https://github.com/nubisproject/nubis-docker-deploy/issues/39)
+- Tag v0.8.8 release [\#42](https://github.com/nubisproject/nubis-docker-deploy/issues/42)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.8.8 release \[skip ci\] [\#44](https://github.com/nubisproject/nubis-docker-deploy/pull/44) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.8.8 release \[skip ci\] [\#43](https://github.com/nubisproject/nubis-docker-deploy/pull/43) ([nubis-automation](https://github.com/nubis-automation))
 - Upgrade to Terraform 0.10.8 [\#41](https://github.com/nubisproject/nubis-docker-deploy/pull/41) ([gozer](https://github.com/gozer))
 
 ## [v0.7.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.7.0) (2018-02-13)

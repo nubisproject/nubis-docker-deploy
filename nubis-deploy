@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1117
 
 MOUNT_VOLUME='/nubis/data'
 WORKING_PATH='/nubis/work'
@@ -170,7 +171,7 @@ terraform-apply () {
 }
 
 terraform-do () {
-    declare -a _ACTION; _ACTION=( ${@} )
+    declare -a _ACTION; _ACTION=( "${@}" )
     cd "${TERRAFORM_PATH}" && terraform "${_ACTION[@]}"
 }
 
