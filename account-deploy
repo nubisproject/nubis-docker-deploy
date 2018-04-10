@@ -139,7 +139,7 @@ plan () {
 
 apply () {
     echo "Running apply for ${NUBIS_ACCOUNT} in ${ACCOUNT_DIR}"
-    cd "${ACCOUNT_DIR}" && terraform apply -input=false -var-file=../../globals/terraform.tfvars -var-file=terraform.tfvars deploy
+    cd "${ACCOUNT_DIR}" && terraform apply -auto-approve=true -input=false -var-file=../../globals/terraform.tfvars -var-file=terraform.tfvars deploy
 }
 
 output () {
