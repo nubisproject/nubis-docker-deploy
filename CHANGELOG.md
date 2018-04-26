@@ -1,14 +1,28 @@
 # Change Log
 
+## [v0.12.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.12.0) (2018-04-26)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.11.0...v0.12.0)
+
+**Closed issues:**
+
+- Upgrade to Terraform 0.11.7 [\#60](https://github.com/nubisproject/nubis-docker-deploy/issues/60)
+
+**Merged pull requests:**
+
+- Upgrade to Terraform 0.11.7 [\#62](https://github.com/nubisproject/nubis-docker-deploy/pull/62) ([gozer](https://github.com/gozer))
+
 ## [v0.11.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.11.0) (2018-04-10)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.10.0...v0.11.0)
 
 **Closed issues:**
 
 - Terraform 0.11.x default to input for apply [\#55](https://github.com/nubisproject/nubis-docker-deploy/issues/55)
+- Tag v0.11.0 release [\#57](https://github.com/nubisproject/nubis-docker-deploy/issues/57)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.11.0 release \[skip ci\] [\#59](https://github.com/nubisproject/nubis-docker-deploy/pull/59) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.11.0 release \[skip ci\] [\#58](https://github.com/nubisproject/nubis-docker-deploy/pull/58) ([nubis-automation](https://github.com/nubis-automation))
 - Run TF apply with -auto-approve=true [\#56](https://github.com/nubisproject/nubis-docker-deploy/pull/56) ([gozer](https://github.com/gozer))
 
 ## [v0.10.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.10.0) (2018-04-09)
