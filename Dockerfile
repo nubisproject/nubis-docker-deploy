@@ -10,7 +10,7 @@ ENV AwCliVersion=1.10.38 \
     JqVersion=1.5-r4 \
     KopsVersion=1.9.0 \
     KubeCtlVersion=1.10.2 \
-    TerraformVersion=0.11.5 \
+    TerraformVersion=0.11.7 \
     Toml2JSONVersion=0.1.0 \
     UnicredsVersion=1.5.1
 
