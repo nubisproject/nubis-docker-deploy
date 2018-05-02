@@ -301,7 +301,7 @@ while [ "$1" != "" ]; do
 #             cleanup
 #             GOT_COMMAND=1
 #         ;;
-        output )
+        output | outputs )
             dependency_check
             setup_account
             output
