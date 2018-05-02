@@ -1,14 +1,24 @@
 # Change Log
 
+## [v0.13.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.13.0) (2018-05-02)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.12.0...v0.13.0)
+
+**Merged pull requests:**
+
+- Add requirements for working with kubernetes [\#67](https://github.com/nubisproject/nubis-docker-deploy/pull/67) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v0.12.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.12.0) (2018-04-26)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.11.0...v0.12.0)
 
 **Closed issues:**
 
 - Upgrade to Terraform 0.11.7 [\#60](https://github.com/nubisproject/nubis-docker-deploy/issues/60)
+- Tag v0.12.0 release [\#63](https://github.com/nubisproject/nubis-docker-deploy/issues/63)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.12.0 release \[skip ci\] [\#65](https://github.com/nubisproject/nubis-docker-deploy/pull/65) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.12.0 release \[skip ci\] [\#64](https://github.com/nubisproject/nubis-docker-deploy/pull/64) ([nubis-automation](https://github.com/nubis-automation))
 - Upgrade to Terraform 0.11.7 [\#62](https://github.com/nubisproject/nubis-docker-deploy/pull/62) ([gozer](https://github.com/gozer))
 
 ## [v0.11.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.11.0) (2018-04-10)
