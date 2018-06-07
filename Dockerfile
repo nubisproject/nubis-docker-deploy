@@ -11,7 +11,7 @@ ENV AwCliVersion=1.10.38 \
     KopsVersion=1.9.0 \
     KubeCtlVersion=1.10.2 \
     TerraformVersion=0.11.7 \
-    Toml2JSONVersion=0.1.0 \
+    Json2HclVersion=0.0.6 \
     UnicredsVersion=1.5.1
 
 WORKDIR /nubis
@@ -29,7 +29,6 @@ RUN apk add --no-cache \
     unzip \
     && rm -f /var/cache/apk/APKINDEX.* \
     && pip install awscli==${AwCliVersion} \
-    && pip install -v toml2json==${Toml2JSONVersion} \
     && mkdir -p /nubis/bin /nubis/work
 
 # Install Terraform & Unicreds & Kops & Kubectl
@@ -42,6 +41,9 @@ RUN ["/bin/bash", "-c", "set -o pipefail \
     && curl -LO --silent --show-error https://github.com/kubernetes/kops/releases/download/${KopsVersion}/kops-linux-amd64 \
     && mv kops-linux-amd64 /usr/local/bin/kops \
     && chmod +x /usr/local/bin/kops \
+    && curl -LO --silent --show-error https://github.com/kvz/json2hcl/releases/download/v${Json2HclVersion}/json2hcl_v${Json2HclVersion}_linux_amd64 \
+    && mv json2hcl_v${Json2HclVersion}_linux_amd64 /usr/local/bin/json2hcl \
+    && chmod +x /usr/local/bin/json2hcl \
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KubeCtlVersion}/bin/linux/amd64/kubectl \
     && mv kubectl /usr/local/bin/kubectl \
     && chmod +x /usr/local/bin/kubectl" ]
