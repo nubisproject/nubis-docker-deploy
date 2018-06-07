@@ -1,10 +1,27 @@
 # Change Log
 
-## [v0.13.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.13.0) (2018-05-02)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.12.0...v0.13.0)
+## [v0.14.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.14.0) (2018-06-07)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.13.0...v0.14.0)
+
+**Closed issues:**
+
+- Use json2hcl instead of toml2json [\#71](https://github.com/nubisproject/nubis-docker-deploy/issues/71)
 
 **Merged pull requests:**
 
+- \[please test\] Convert to json2hcl [\#72](https://github.com/nubisproject/nubis-docker-deploy/pull/72) ([limed](https://github.com/limed))
+
+## [v0.13.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.13.0) (2018-05-02)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.12.0...v0.13.0)
+
+**Closed issues:**
+
+- Tag v0.13.0 release [\#68](https://github.com/nubisproject/nubis-docker-deploy/issues/68)
+
+**Merged pull requests:**
+
+- Update CHANGELOG for v0.13.0 release \[skip ci\] [\#70](https://github.com/nubisproject/nubis-docker-deploy/pull/70) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.13.0 release \[skip ci\] [\#69](https://github.com/nubisproject/nubis-docker-deploy/pull/69) ([nubis-automation](https://github.com/nubis-automation))
 - Add requirements for working with kubernetes [\#67](https://github.com/nubisproject/nubis-docker-deploy/pull/67) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.12.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.12.0) (2018-04-26)
