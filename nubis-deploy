@@ -39,7 +39,7 @@ setup-terraform () {
         exit 1
     fi
 
-    ACCOUNT=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
+    ACCOUNT=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
     # Make sure we got an account name
     if [ "${ACCOUNT}" == 'null' ]; then
         echo -e "\033[1;31mERROR: 'account' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
@@ -53,7 +53,7 @@ setup-terraform () {
         fi
         export ACCOUNT
     fi
-    ARENA=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
+    ARENA=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .arena )
     # Make sure we got an arena
     if [ "${ARENA}" == 'null' ]; then
         echo -e "\033[0;32mWARNING: 'arena' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
@@ -63,7 +63,7 @@ setup-terraform () {
     else
         export ARENA
     fi
-    DEPLOYMENT_REGION=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
+    DEPLOYMENT_REGION=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
     # Make sure we got a deployment region
     if [ "${DEPLOYMENT_REGION}" == 'null' ]; then
         echo -e "\033[1;31mERROR: 'region' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
@@ -71,7 +71,7 @@ setup-terraform () {
     else
         export DEPLOYMENT_REGION
     fi
-    SERVICE_NAME=$(toml2json < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name )
+    SERVICE_NAME=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .service_name )
     # Make sure we got a service name
     if [ "${SERVICE_NAME}" == 'null' ]; then
         echo -e "\033[1;31mERROR: 'service_name' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
