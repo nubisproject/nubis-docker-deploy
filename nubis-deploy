@@ -33,10 +33,15 @@ setup-terraform () {
 
     # Test for the existance of state.tf file
     if [ ! -f "${MOUNT_TERRAFORM_PATH}/state.tf" ];then
-        echo -e "\033[1;31mERROR: 'state.tf' file not found in ${MOUNT_TERRAFORM_PATH}\033[0m"
-        echo -e "\033[1;31mERROR: 'state.tf' file should contain the following lines:\033[0m"
-        echo -e "\033[1;31mERROR: terraform { backend \"s3\" {} }\033[0m"
-        exit 1
+        echo -e "\033[0;32mWARNING: 'state.tf' file not found in ${MOUNT_TERRAFORM_PATH}\033[0m"
+        echo -e "\033[0;32mWARNING: 'state.tf' file should contain the following lines:\033[0m"
+        echo -e "\033[0;32mWARNING: terraform { backend \"s3\" {} }\033[0m"
+        echo -e "\033[0;32mWARNING: Adding temporary state.tf file.\033[0m"
+
+        # Workaround for TF bug https://github.com/hashicorp/terraform/issues/15761
+        TF_CONSUL_WORKAROUND="${MOUNT_TERRAFORM_PATH}/nubis-state-${RANDOM}.tf"
+        echo 'terraform { backend "s3" { } }' > "${TF_CONSUL_WORKAROUND}"
+        export TF_CONSUL_WORKAROUND
     fi
 
     ACCOUNT=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .account )
@@ -116,6 +121,16 @@ setup-terraform () {
         echo "Creating directory ${WORKING_PATH}/${SERVICE_NAME}"
         mkdir "${WORKING_PATH}/${SERVICE_NAME}"
     fi
+
+    # Determine if we have a tty and set input accordingly
+    if ! tty 2&>1 >/dev/null; then
+        echo "Info: setting -input=false"
+        TTY_INPUT='false'
+    else
+        echo "Info: setting -input=true"
+        TTY_INPUT='true'
+    fi
+    export TTY_INPUT
 }
 
 setup-deploy-dir () {
@@ -141,11 +156,11 @@ terraform-init () {
     fi
 
     if ! terraform init \
-        -input=true \
+        -input="${TTY_INPUT}" \
         -upgrade=true \
         -backend-config="region=${BUCKET_REGION}" \
         -backend-config="key=terraform/${SERVICE_NAME}" \
-        -backend-config="bucket=${STATE_BUCKET}";
+        -backend-config="bucket=${STATE_BUCKET}"
     then
         echo -e "\033[1;31mERROR: Could not initialize teraform\033[0m"
         exit 1
@@ -158,27 +173,37 @@ terraform-apply () {
         exit 1
     fi
 
-    if ! terraform plan -out=".terraform/terraform.plan"; then
+    if ! terraform plan -input="${TTY_INPUT}" -out=".terraform/terraform.plan"; then
         echo -e "\033[1;31mERROR: Terraform plan failed. Not applying plan\033[0m"
         exit 1
     fi
 
-    terraform apply ".terraform/terraform.plan"
+    terraform apply -input="${TTY_INPUT}" ".terraform/terraform.plan"
 
     # Copy Terraform files to the S3 bucket
     echo -e "\nUploading Terraform assets to s3"
     aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${SERVICE_NAME}-terraform/"
+
+    # Clean up temporary file if we created one
+    if [ -f "${TF_CONSUL_WORKAROUND}" ];then
+        rm "${TF_CONSUL_WORKAROUND}"
+    fi
 }
 
 terraform-do () {
     declare -a _ACTION; _ACTION=( "${@}" )
     cd "${TERRAFORM_PATH}" && terraform "${_ACTION[@]}"
+
+    # Clean up temporary file if we created one
+    if [ -f "${TF_CONSUL_WORKAROUND}" ];then
+        rm "${TF_CONSUL_WORKAROUND}"
+    fi
 }
 
 # Grab and setup called options
 while [ "$1" != "" ]; do
     case $1 in
-        --debug )
+        -x | --debug )
             set -x
         ;;
         -h | --help | help )
@@ -187,9 +212,18 @@ while [ "$1" != "" ]; do
         --skip-init )
             SKIP_INIT='1'
         ;;
+        -a | --account | --account-name )
+            NUBIS_ACCOUNT="$2"
+            shift
+        ;;
+
         account )
             shift
-            account-deploy "${@}"
+            if [ "${#@}" == 0 ]; then
+                account-deploy
+            else
+                account-deploy --account "${NUBIS_ACCOUNT}" "${@}"
+            fi
             shift "${#@}"
             GOT_COMMAND=1
         ;;
@@ -197,7 +231,7 @@ while [ "$1" != "" ]; do
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do plan
+            terraform-do plan -input="${TTY_INPUT}"
             GOT_COMMAND=1
         ;;
         apply )
@@ -211,14 +245,14 @@ while [ "$1" != "" ]; do
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do destroy
+            terraform-do destroy -input="${TTY_INPUT}"
             GOT_COMMAND=1
         ;;
         show )
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do show
+            terraform-do show -input="${TTY_INPUT}"
             GOT_COMMAND=1
         ;;
         output )
@@ -226,7 +260,7 @@ while [ "$1" != "" ]; do
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do output "${@}"
+            terraform-do output -input="${TTY_INPUT}" "${@}"
             GOT_COMMAND=1
         ;;
         state )
@@ -234,7 +268,7 @@ while [ "$1" != "" ]; do
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do state "${@}"
+            terraform-do state -input="${TTY_INPUT}" "${@}"
             GOT_COMMAND=1
         ;;
         * )

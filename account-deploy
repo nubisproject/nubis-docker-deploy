@@ -266,7 +266,7 @@ accounts () {
 # Grab and setup called options
 while [ "$1" != "" ]; do
     case "$1" in
-        --debug | --setx )
+        -x | --debug | --setx )
             set -x
         ;;
         -h | --help | help )
