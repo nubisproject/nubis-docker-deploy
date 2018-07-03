@@ -38,10 +38,10 @@ RUN ["/bin/bash", "-c", "set -o pipefail \
     && rm terraform_${TerraformVersion}_linux_amd64.zip \
     && curl -L https://github.com/Versent/unicreds/releases/download/${UnicredsVersion}/unicreds_${UnicredsVersion}_linux_amd64.tar.gz \
     | tar -C /nubis/bin -xzf - \
-    && curl -LO --silent --show-error https://github.com/kubernetes/kops/releases/download/${KopsVersion}/kops-linux-amd64 \
+    && curl -LO https://github.com/kubernetes/kops/releases/download/${KopsVersion}/kops-linux-amd64 \
     && mv kops-linux-amd64 /usr/local/bin/kops \
     && chmod +x /usr/local/bin/kops \
-    && curl -LO --silent --show-error https://github.com/kvz/json2hcl/releases/download/v${Json2HclVersion}/json2hcl_v${Json2HclVersion}_linux_amd64 \
+    && curl -LO https://github.com/kvz/json2hcl/releases/download/v${Json2HclVersion}/json2hcl_v${Json2HclVersion}_linux_amd64 \
     && mv json2hcl_v${Json2HclVersion}_linux_amd64 /usr/local/bin/json2hcl \
     && chmod +x /usr/local/bin/json2hcl \
     && curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KubeCtlVersion}/bin/linux/amd64/kubectl \
