@@ -123,7 +123,7 @@ setup-terraform () {
     fi
 
     # Determine if we have a tty and set input accordingly
-    if ! tty 2&>1 >/dev/null; then
+    if ! tty > /dev/null 2&>1 ; then
         echo "Info: setting -input=false"
         TTY_INPUT='false'
     else
