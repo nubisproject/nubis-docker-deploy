@@ -1,14 +1,24 @@
 # Change Log
 
+## [v0.15.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.15.0) (2018-07-03)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.14.0...v0.15.0)
+
+**Merged pull requests:**
+
+- Enable tty autodetection [\#78](https://github.com/nubisproject/nubis-docker-deploy/pull/78) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v0.14.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.14.0) (2018-06-07)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.13.0...v0.14.0)
 
 **Closed issues:**
 
 - Use json2hcl instead of toml2json [\#71](https://github.com/nubisproject/nubis-docker-deploy/issues/71)
+- Tag v0.14.0 release [\#73](https://github.com/nubisproject/nubis-docker-deploy/issues/73)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.14.0 release \[skip ci\] [\#75](https://github.com/nubisproject/nubis-docker-deploy/pull/75) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.14.0 release \[skip ci\] [\#74](https://github.com/nubisproject/nubis-docker-deploy/pull/74) ([nubis-automation](https://github.com/nubis-automation))
 - \[please test\] Convert to json2hcl [\#72](https://github.com/nubisproject/nubis-docker-deploy/pull/72) ([limed](https://github.com/limed))
 
 ## [v0.13.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.13.0) (2018-05-02)
