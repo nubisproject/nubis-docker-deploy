@@ -119,7 +119,11 @@ setup-terraform () {
     export TERRAFORM_PATH="${WORKING_PATH}/${SERVICE_NAME}/nubis/terraform"
     if [ ! -d "${WORKING_PATH}/${SERVICE_NAME}" ]; then
         echo "Creating directory ${WORKING_PATH}/${SERVICE_NAME}"
-        mkdir "${WORKING_PATH}/${SERVICE_NAME}"
+        if ! mkdir "${WORKING_PATH}/${SERVICE_NAME}" ; then
+            echo -e "\033[1;31mERROR: Failed running 'mkdir ${WORKING_PATH}/${SERVICE_NAME}'\033[0m"
+            exit 1
+        fi
+
     fi
 
     # Determine if we have a tty and set input accordingly
@@ -178,11 +182,24 @@ terraform-apply () {
         exit 1
     fi
 
-    terraform apply -input="${TTY_INPUT}" ".terraform/terraform.plan"
+    if [ "${#@}" != 0 ]; then
+        if ! terraform apply -input="${TTY_INPUT}" "${@}" ".terraform/terraform.plan" ; then
+            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT} ${*} .terraform/terraform.plan'\033[0m"
+            exit 1
+        fi
+    else
+        if ! terraform apply -input="${TTY_INPUT}" ".terraform/terraform.plan" ; then
+            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT} .terraform/terraform.plan'\033[0m"
+            exit 1
+        fi
+    fi
 
     # Copy Terraform files to the S3 bucket
     echo -e "\nUploading Terraform assets to s3"
-    aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${SERVICE_NAME}-terraform/"
+    if ! aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${SERVICE_NAME}-terraform/" ; then
+        echo -e "\033[1;31mERROR: Failed uploading assets to S3\033[0m"
+        exit 1
+    fi
 
     # Clean up temporary file if we created one
     if [ -f "${TF_CONSUL_WORKAROUND}" ];then
@@ -192,7 +209,16 @@ terraform-apply () {
 
 terraform-do () {
     declare -a _ACTION; _ACTION=( "${@}" )
-    cd "${TERRAFORM_PATH}" && terraform "${_ACTION[@]}"
+
+    if ! cd "${TERRAFORM_PATH}" ; then
+        echo -e "\033[1;31mERROR: Could not cd into '${TERRAFORM_PATH}'\033[0m"
+        exit 1
+    fi
+
+    if ! terraform "${_ACTION[@]}" ; then
+        echo -e "\033[1;31mERROR: Failed running 'terraform ${_ACTION[*]}'\033[0m"
+        exit 1
+    fi
 
     # Clean up temporary file if we created one
     if [ -f "${TF_CONSUL_WORKAROUND}" ];then
@@ -205,6 +231,7 @@ while [ "$1" != "" ]; do
     case $1 in
         -x | --debug )
             set -x
+            export TF_LOG='DEBUG'
         ;;
         -h | --help | help )
             show_help
@@ -228,39 +255,43 @@ while [ "$1" != "" ]; do
             GOT_COMMAND=1
         ;;
         plan )
-            setup-terraform
-            setup-deploy-dir
-            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do plan -input="${TTY_INPUT}"
-            GOT_COMMAND=1
-        ;;
-        apply )
-            setup-terraform
-            setup-deploy-dir
-            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-apply
-            GOT_COMMAND=1
-        ;;
-        destroy )
-            setup-terraform
-            setup-deploy-dir
-            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do destroy -input="${TTY_INPUT}"
-            GOT_COMMAND=1
-        ;;
-        show )
-            setup-terraform
-            setup-deploy-dir
-            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do show -input="${TTY_INPUT}"
-            GOT_COMMAND=1
-        ;;
-        output )
             shift
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do output -input="${TTY_INPUT}" "${@}"
+            terraform-do plan -input="${TTY_INPUT}" "${@}"
+            GOT_COMMAND=1
+        ;;
+        apply )
+            shift
+            setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
+            terraform-apply "${@}"
+            GOT_COMMAND=1
+        ;;
+        destroy )
+            shift
+            setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
+            terraform-do destroy -input="${TTY_INPUT}" "${@}"
+            GOT_COMMAND=1
+        ;;
+        show )
+            shift
+            setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
+            terraform-do show "${@}"
+            GOT_COMMAND=1
+        ;;
+        output | outputs )
+            shift
+            setup-terraform
+            setup-deploy-dir
+            [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
+            terraform-do output "${@}"
             GOT_COMMAND=1
         ;;
         state )
@@ -268,7 +299,7 @@ while [ "$1" != "" ]; do
             setup-terraform
             setup-deploy-dir
             [[ ${SKIP_INIT:-0} == 0 ]] && terraform-init || echo "Skipping terraform-init"
-            terraform-do state -input="${TTY_INPUT}" "${@}"
+            terraform-do state "${@}"
             GOT_COMMAND=1
         ;;
         * )
