@@ -1,10 +1,28 @@
 # Change Log
 
-## [v0.15.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.15.0) (2018-07-03)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.14.0...v0.15.0)
+## [v0.16.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.16.0) (2018-07-11)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.15.0...v0.16.0)
+
+**Closed issues:**
+
+- Add debugging output for terraform [\#83](https://github.com/nubisproject/nubis-docker-deploy/issues/83)
+- Expose $rv to caller [\#82](https://github.com/nubisproject/nubis-docker-deploy/issues/82)
 
 **Merged pull requests:**
 
+- Carry $rv through and add Terraform debug support [\#84](https://github.com/nubisproject/nubis-docker-deploy/pull/84) ([tinnightcap](https://github.com/tinnightcap))
+
+## [v0.15.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.15.0) (2018-07-03)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.14.0...v0.15.0)
+
+**Closed issues:**
+
+- Tag v0.15.0 release [\#79](https://github.com/nubisproject/nubis-docker-deploy/issues/79)
+
+**Merged pull requests:**
+
+- Update CHANGELOG for v0.15.0 release \[skip ci\] [\#81](https://github.com/nubisproject/nubis-docker-deploy/pull/81) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.15.0 release \[skip ci\] [\#80](https://github.com/nubisproject/nubis-docker-deploy/pull/80) ([nubis-automation](https://github.com/nubis-automation))
 - Enable tty autodetection [\#78](https://github.com/nubisproject/nubis-docker-deploy/pull/78) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.14.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.14.0) (2018-06-07)
