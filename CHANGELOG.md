@@ -1,5 +1,12 @@
 # Change Log
 
+## [v0.17.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.17.0) (2018-07-13)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.16.0...v0.17.0)
+
+**Merged pull requests:**
+
+- Work around AWS S333diocy [\#88](https://github.com/nubisproject/nubis-docker-deploy/pull/88) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v0.16.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.16.0) (2018-07-11)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.15.0...v0.16.0)
 
@@ -7,9 +14,12 @@
 
 - Add debugging output for terraform [\#83](https://github.com/nubisproject/nubis-docker-deploy/issues/83)
 - Expose $rv to caller [\#82](https://github.com/nubisproject/nubis-docker-deploy/issues/82)
+- Tag v0.16.0 release [\#85](https://github.com/nubisproject/nubis-docker-deploy/issues/85)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v0.16.0 release \[skip ci\] [\#87](https://github.com/nubisproject/nubis-docker-deploy/pull/87) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.16.0 release \[skip ci\] [\#86](https://github.com/nubisproject/nubis-docker-deploy/pull/86) ([nubis-automation](https://github.com/nubis-automation))
 - Carry $rv through and add Terraform debug support [\#84](https://github.com/nubisproject/nubis-docker-deploy/pull/84) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.15.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.15.0) (2018-07-03)
