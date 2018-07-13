@@ -105,7 +105,7 @@ setup-terraform () {
     else
         export STATE_BUCKET
     fi
-    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint')
+    BUCKET_REGION=$(aws s3api get-bucket-location --bucket "${STATE_BUCKET}" | jq -r '.LocationConstraint // "us-east-1"')
     # Make sure we got a state bucket region
     if [ "${BUCKET_REGION}" == 'null' ]; then
         echo -e "\033[1;31mERROR: Could not look up bucket location using:\033[0m"
