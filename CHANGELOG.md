@@ -1,10 +1,28 @@
 # Change Log
 
-## [v0.17.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.17.0) (2018-07-13)
-[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.16.0...v0.17.0)
+## [v1.0.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v1.0.0) (2018-07-16)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.17.0...v1.0.0)
+
+**Closed issues:**
+
+- Tag v1.0.0 release [\#93](https://github.com/nubisproject/nubis-docker-deploy/issues/93)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v1.0.0 release \[skip ci\] [\#94](https://github.com/nubisproject/nubis-docker-deploy/pull/94) ([nubis-automation](https://github.com/nubis-automation))
+- Add region/arena/environment to S3 path [\#92](https://github.com/nubisproject/nubis-docker-deploy/pull/92) ([tinnightcap](https://github.com/tinnightcap))
+
+## [v0.17.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.17.0) (2018-07-13)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.16.0...v0.17.0)
+
+**Closed issues:**
+
+- Tag v0.17.0 release [\#89](https://github.com/nubisproject/nubis-docker-deploy/issues/89)
+
+**Merged pull requests:**
+
+- Update CHANGELOG for v0.17.0 release \[skip ci\] [\#91](https://github.com/nubisproject/nubis-docker-deploy/pull/91) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v0.17.0 release \[skip ci\] [\#90](https://github.com/nubisproject/nubis-docker-deploy/pull/90) ([nubis-automation](https://github.com/nubis-automation))
 - Work around AWS S333diocy [\#88](https://github.com/nubisproject/nubis-docker-deploy/pull/88) ([tinnightcap](https://github.com/tinnightcap))
 
 ## [v0.16.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v0.16.0) (2018-07-11)
