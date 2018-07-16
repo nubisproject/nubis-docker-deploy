@@ -204,7 +204,7 @@ terraform-apply () {
 
     # Copy Terraform files to the S3 bucket
     echo -e "\nUploading Terraform assets to s3"
-    if ! aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${SERVICE_NAME}-terraform/" ; then
+    if ! aws s3 sync --delete --region "${BUCKET_REGION}" --exclude ".terraform*" "${TERRAFORM_PATH}/" "s3://${STATE_BUCKET}/terraform/${DEPLOYMENT_REGION}/${ARENA}/${ENVIRONMENT}/${SERVICE_NAME}-terraform/" ; then
         echo -e "\033[1;31mERROR: Failed uploading assets to S3\033[0m"
         exit 1
     fi
