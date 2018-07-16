@@ -68,6 +68,14 @@ setup-terraform () {
     else
         export ARENA
     fi
+    ENVIRONMENT=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .environment )
+    # Make sure we got an arena
+    if [ "${ENVIRONMENT}" == 'null' ]; then
+        echo -e "\033[1;31mERROR: 'environment' not set ${MOUNT_TERRAFORM_PATH}/terraform.tfvars\033[0m"
+        exit 1
+    else
+        export ENVIRONMENT
+    fi
     DEPLOYMENT_REGION=$(json2hcl -reverse < "${MOUNT_TERRAFORM_PATH}/terraform.tfvars" | jq -r .region )
     # Make sure we got a deployment region
     if [ "${DEPLOYMENT_REGION}" == 'null' ]; then
@@ -163,7 +171,7 @@ terraform-init () {
         -input="${TTY_INPUT}" \
         -upgrade=true \
         -backend-config="region=${BUCKET_REGION}" \
-        -backend-config="key=terraform/${SERVICE_NAME}" \
+        -backend-config="key=terraform/${DEPLOYMENT_REGION}/${ARENA}/${ENVIRONMENT}/${SERVICE_NAME}" \
         -backend-config="bucket=${STATE_BUCKET}"
     then
         echo -e "\033[1;31mERROR: Could not initialize teraform\033[0m"
