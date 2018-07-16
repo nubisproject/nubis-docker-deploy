@@ -1,14 +1,24 @@
 # Change Log
 
+## [v1.0.1](https://github.com/nubisproject/nubis-docker-deploy/tree/v1.0.1) (2018-07-16)
+[Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v1.0.0...v1.0.1)
+
+**Merged pull requests:**
+
+- Also add region/arena/env to uploaded assets [\#98](https://github.com/nubisproject/nubis-docker-deploy/pull/98) ([tinnightcap](https://github.com/tinnightcap))
+
 ## [v1.0.0](https://github.com/nubisproject/nubis-docker-deploy/tree/v1.0.0) (2018-07-16)
 [Full Changelog](https://github.com/nubisproject/nubis-docker-deploy/compare/v0.17.0...v1.0.0)
 
 **Closed issues:**
 
+- Tag v1.0.0 release [\#95](https://github.com/nubisproject/nubis-docker-deploy/issues/95)
 - Tag v1.0.0 release [\#93](https://github.com/nubisproject/nubis-docker-deploy/issues/93)
 
 **Merged pull requests:**
 
+- Update CHANGELOG for v1.0.0 release \[skip ci\] [\#97](https://github.com/nubisproject/nubis-docker-deploy/pull/97) ([nubis-automation](https://github.com/nubis-automation))
+- Update CHANGELOG for v1.0.0 release \[skip ci\] [\#96](https://github.com/nubisproject/nubis-docker-deploy/pull/96) ([nubis-automation](https://github.com/nubis-automation))
 - Update CHANGELOG for v1.0.0 release \[skip ci\] [\#94](https://github.com/nubisproject/nubis-docker-deploy/pull/94) ([nubis-automation](https://github.com/nubis-automation))
 - Add region/arena/environment to S3 path [\#92](https://github.com/nubisproject/nubis-docker-deploy/pull/92) ([tinnightcap](https://github.com/tinnightcap))
 
