@@ -11,6 +11,7 @@ show_help () {
     echo -en "\nUsage:docker run --interactive --tty --env-file ~/.docker_env -v $PWD:/nubis/data nubis-deploy [command]\n\n"
     echo -en "Commands:\n"
     echo -en "  --help         Print this help message\n"
+    echo -en "  --domain       Set domain for looking up state (Default: nubis.allizom.org)\n"
     echo -en "  --skip-init    Skip Terraform initialization\n"
     echo -en "                   Must be used with a volume mount only after initial run\n"
     echo -en "  plan           Show the deployment plan\n"
@@ -92,12 +93,12 @@ setup-terraform () {
     else
         export SERVICE_NAME
     fi
-    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
+    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.${NUBIS_DOMAIN:-'nubis.allizom.org'}/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
         jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
     # Make sure we have a state bucket
     if [ "${STATE_BUCKET}" == 'null' ] || [ -z "${STATE_BUCKET}" ]; then
         echo -e "\033[1;32mWARNING: Could not find state bucket in account '${ARENA}.tfstate' file using:\033[0m"
-        echo -e "\033[1;32mWARNING: 'curl -s \"http://state.nubis.${ACCOUNT}.nubis.allizom.org/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
+        echo -e "\033[1;32mWARNING: 'curl -s \"http://state.nubis.${ACCOUNT}.${NUBIS_DOMAIN:-'nubis.allizom.org'}/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate\"'\033[0m"
 
         # Default checking state bucket using awscli
         echo -e "\033[0;32mWARNING: Defaulting state bucket discovery in S3 using awscli\033[0m"
@@ -251,7 +252,10 @@ while [ "$1" != "" ]; do
             NUBIS_ACCOUNT="$2"
             shift
         ;;
-
+        -d | --domain )
+            NUBIS_DOMAIN="${2}"
+            shift
+        ;;
         account )
             shift
             if [ "${#@}" == 0 ]; then
