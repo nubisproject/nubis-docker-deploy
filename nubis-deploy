@@ -93,7 +93,7 @@ setup-terraform () {
     else
         export SERVICE_NAME
     fi
-    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.${NUBIS_DOMAIN:-'nubis.allizom.org'}/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
+    STATE_BUCKET=$(curl -s "http://state.nubis.${ACCOUNT}.${NUBIS_DOMAIN:-nubis.allizom.org}/aws/${DEPLOYMENT_REGION}/${ARENA}.tfstate" | \
         jq -r ' .modules[] | select(.path == ["root"]) | .outputs.apps_state_bucket')
     # Make sure we have a state bucket
     if [ "${STATE_BUCKET}" == 'null' ] || [ -z "${STATE_BUCKET}" ]; then
