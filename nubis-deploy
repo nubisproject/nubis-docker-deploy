@@ -156,6 +156,7 @@ setup-deploy-dir () {
     RSYNC_EXCLUDES+=( '--exclude=.git*' )
     RSYNC_EXCLUDES+=( '--exclude=.travis.yml' )
     RSYNC_EXCLUDES+=( '--exclude=terraform.tfstate*' )
+    RSYNC_EXCLUDES+=( '--delete-excluded' )
     if ! "${RSYNC[@]}" "${RSYNC_EXCLUDES[@]}" -x "${MOUNT_VOLUME}/" "${WORKING_PATH}/${SERVICE_NAME}/" ; then
         echo -e "\033[1;31mERROR: Failed to rsync files\033[0m"
         exit 1
