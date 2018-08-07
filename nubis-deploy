@@ -186,19 +186,19 @@ terraform-apply () {
         exit 1
     fi
 
-    if ! terraform plan -input="${TTY_INPUT}" -out=".terraform/terraform.plan"; then
-        echo -e "\033[1;31mERROR: Terraform plan failed. Not applying plan\033[0m"
-        exit 1
-    fi
+#    if ! terraform plan -input="${TTY_INPUT}" -out=".terraform/terraform.plan"; then
+#        echo -e "\033[1;31mERROR: Terraform plan failed. Not applying plan\033[0m"
+#        exit 1
+#    fi
 
     if [ "${#@}" != 0 ]; then
-        if ! terraform apply -input="${TTY_INPUT}" "${@}" ".terraform/terraform.plan" ; then
-            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT} ${*} .terraform/terraform.plan'\033[0m"
+        if ! terraform apply -input="${TTY_INPUT}" "${@}" ; then
+            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT} ${*}'\033[0m"
             exit 1
         fi
     else
-        if ! terraform apply -input="${TTY_INPUT}" ".terraform/terraform.plan" ; then
-            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT} .terraform/terraform.plan'\033[0m"
+        if ! terraform apply -input="${TTY_INPUT}" ; then
+            echo -e "\033[1;31mERROR: Failed running 'terraform apply -input=${TTY_INPUT}'\033[0m"
             exit 1
         fi
     fi
